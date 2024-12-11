@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
-from app.database import Base
-
+from base import Base
 class Parents(Base):
     __tablename__ = "parents"
 

@@ -8,3 +8,8 @@ class Item(BaseModel):
     name: str
     description: Union[str, None] = None
     price: float
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
