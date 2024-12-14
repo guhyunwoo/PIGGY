@@ -1,28 +1,13 @@
-from fastapi import FastAPI
-from fastapi.params import Depends, Body
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from app import model, schema, database
+from app.database import SessionLocal
 from datetime import datetime, timedelta
+from . import model, schema
 
-app = FastAPI()
-
-def get_db():
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-@app.get("/")
-def get_all():
-    return {"message": "Welcome to the API!"}
-
-@app.get("/log")
-def get_log_all(db: Session = Depends(get_db)):
+def get_logs(db: Session):
     return db.query(model.Log).order_by(model.Log.date.desc()).all()
 
-@app.get("/log/weekly")
-def get_weekly_amount(db: Session = Depends(get_db)):
+def get_weekly_amount(db: Session):
     # 현재 날짜와 시간 가져오기
     now = datetime.now()
 
@@ -37,10 +22,8 @@ def get_weekly_amount(db: Session = Depends(get_db)):
         .scalar() or 0  # 결과 가져오기
     )
 
-@app.post("/log")
-def create_log(db: Session = Depends(get_db), log: schema.LogCreate = Body(...)):
-    db_log = model.Log(**log.dict())
+def create_log(db: Session, log: schema.LogCreate):
+    db_log = model.Log(**log.model_dump())
     db.add(db_log)
     db.commit()
     db.refresh(db_log)
-    return db_log
