@@ -15,14 +15,12 @@ def get_db():
         yield db
     finally:
         db.close()
-@app.get("/")
-def get_all():
-    return {"message": "Welcome to the API!"}
-
+# 저축 로그 불러오기
 @app.get("/log")
 def get_log_all(db: Session = Depends(get_db)):
     return db.query(model.Log).order_by(model.Log.date.desc()).all()
 
+# 주간 저축 로그
 @app.get("/log/weekly")
 def get_weekly_amount(db: Session = Depends(get_db)):
     # 현재 날짜와 시간 가져오기
@@ -38,7 +36,7 @@ def get_weekly_amount(db: Session = Depends(get_db)):
         .filter(model.Log.date >= monday_start)  # 일요일 이후의 로그
         .scalar() or 0  # 결과 가져오기
     )
-
+# 저축 로그 생성
 @app.post("/log")
 def create_log(db: Session = Depends(get_db), coin: int = Body(...)):
     max_goal_id = db.query(func.max(model.Goal.goal_id)).scalar() or 0
@@ -46,12 +44,13 @@ def create_log(db: Session = Depends(get_db), coin: int = Body(...)):
     db.add(db_log)
     db.commit()
     db.refresh(db_log)
-    return db_log
 
+# 목표 로그 불러오기
 @app.get("/goal")
 def get_goals(db: Session = Depends(get_db)):
     return db.query(model.Goal).order_by(model.Goal.goal_id.desc()).all()
 
+# 목표 로그 생성
 @app.post("/goal")
 def create_goal(
     db: Session = Depends(get_db),
@@ -67,4 +66,3 @@ def create_goal(
     db.add(db_goal)
     db.commit()
     db.refresh(db_goal)
-    return db_goal
