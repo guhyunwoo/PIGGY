@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import FastAPI
 from fastapi.params import Depends, Body
 from sqlalchemy import func
@@ -38,9 +40,31 @@ def get_weekly_amount(db: Session = Depends(get_db)):
     )
 
 @app.post("/log")
-def create_log(db: Session = Depends(get_db), log: schema.LogCreate = Body(...)):
-    db_log = model.Log(**log.dict())
+def create_log(db: Session = Depends(get_db), coin: int = Body(...)):
+    max_goal_id = db.query(func.max(model.Goal.goal_id)).scalar() or 0
+    db_log = model.Log(coin = coin, goal_id=max_goal_id)
     db.add(db_log)
     db.commit()
     db.refresh(db_log)
     return db_log
+
+@app.get("/goal")
+def get_goals(db: Session = Depends(get_db)):
+    return db.query(model.Goal).order_by(model.Goal.goal_id.desc()).all()
+
+@app.post("/goal")
+def create_goal(
+    db: Session = Depends(get_db),
+    goal_value : int = Body(...),
+    goal_name : str = Body(...),
+    description : Optional[str] = Body(None)
+):
+    db_goal = model.Goal(
+        goal_value=goal_value,
+        goal_name=goal_name,
+        description=description
+    )
+    db.add(db_goal)
+    db.commit()
+    db.refresh(db_goal)
+    return db_goal
