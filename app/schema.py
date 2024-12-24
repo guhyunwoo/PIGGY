@@ -21,7 +21,7 @@ class Goal(GoalBase):
 # Log 모델 정의
 class LogBase(BaseModel):
     coin: int
-    date: datetime = Field(default_factory=datetime.utcnow)
+    date: datetime = Field(default_factory=datetime.now)
 
 class LogCreate(LogBase):
     goal_id: Optional[datetime] = None

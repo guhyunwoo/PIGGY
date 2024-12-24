@@ -1,6 +1,6 @@
 from typing import Optional
-
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.params import Depends, Body
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -9,6 +9,15 @@ from datetime import datetime, timedelta
 
 app = FastAPI()
 
+database.create_tables()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 def get_db():
     db = database.SessionLocal()
     try:
@@ -26,15 +35,15 @@ def get_weekly_amount(db: Session = Depends(get_db)):
     # 현재 날짜와 시간 가져오기
     now = datetime.now()
 
-    # 이번 주 일요일 0시 계산
-    monday_start = now - timedelta(days=now.weekday())
-    monday_start = monday_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    # 매주 일요일~토요일까지 모은 돈 계산
+    sunday_start = (now - timedelta(days=(now.weekday() + 1) % 7)).replace(hour=0, minute=0, second=0, microsecond=0)
+    saturday_end = sunday_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
 
-    # 이번 주 일요일 이후의 로그만 가져오기
+# 이번 주 일요일부터 토요일까지의 로그만 가져오기
     return (
-        db.query(func.sum(model.Log.coin))
-        .filter(model.Log.date >= monday_start)  # 일요일 이후의 로그
-        .scalar() or 0  # 결과 가져오기
+    db.query(func.sum(model.Log.coin))
+    .filter(model.Log.date >= sunday_start, model.Log.date <= saturday_end)  # 일요일부터 토요일까지의 로그
+    .scalar() or 0  # 결과 가져오기
     )
 # 저축 로그 생성
 @app.post("/log")

@@ -4,3 +4,8 @@ uvicorn
 pymysql
 python-dotenv
 pydantic
+opencv-python
+numpy
+torch
+ultralytics
+python-socketio
