@@ -6,15 +6,17 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app import model, schema, database
 from datetime import datetime, timedelta
+import pickle
+import numpy as np
 
 app = FastAPI()
 
 database.create_tables()
 
-app.add_middleware(
+app.add_middleware( 
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=True, 
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -25,6 +27,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 # 저축 로그 불러오기
 @app.get("/log")
 def get_log_all(db: Session = Depends(get_db)):
@@ -48,9 +51,9 @@ def get_weekly_amount(db: Session = Depends(get_db)):
     )
 # 저축 로그 생성
 @app.post("/log")
-def create_log(db: Session = Depends(get_db), coin: int = Body(...)):
+def create_log(log: schema.LogBase, db: Session = Depends(get_db)):
     max_goal_id = db.query(func.max(model.Goal.goal_id)).scalar() or 0
-    db_log = model.Log(coin = coin, goal_id=max_goal_id)
+    db_log = model.Log(coin = log.coin, goal_id=max_goal_id)
     db.add(db_log)
     db.commit()
     db.refresh(db_log)

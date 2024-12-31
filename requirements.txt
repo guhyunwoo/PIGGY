@@ -10,3 +10,4 @@ torch
 ultralytics
 python-socketio
 cryptography
+picamera

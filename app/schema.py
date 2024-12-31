@@ -24,7 +24,7 @@ class LogBase(BaseModel):
     date: datetime = Field(default_factory=datetime.now)
 
 class LogCreate(LogBase):
-    goal_id: Optional[datetime] = None
+    goal_id: Optional[int] = None
 
 class Log(LogBase):
     id: int
@@ -33,3 +33,7 @@ class Log(LogBase):
 
     class Config:
         from_attributes = True
+
+class CoordinateData(BaseModel):
+    x: float
+    y: float
